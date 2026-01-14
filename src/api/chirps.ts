@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { respondWithJSON, respondWithError } from "./json.js";
 
 export async function handlerChirpValidation(req: Request, res: Response) {
   let body = ""; // 1. Initialize
@@ -24,16 +25,11 @@ export async function handlerChirpValidation(req: Request, res: Response) {
         throw new Error("Chirp is too long");
       }
 
-      res.send({
-        valid: true,
-      });
-      
+      respondWithJSON(res, 200, { valid: true });    
     } catch (error) {
         if (error instanceof Error)
         {
-            res.status(400).send({
-                error: error.message
-            });
+          respondWithError(res, 400, error.message);
         }
     }
   });

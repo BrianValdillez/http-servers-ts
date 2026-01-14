@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { config } from './config.js';
+import { config } from "../config.js";
 
 export function middlewareLogResponses(req: Request, res:Response, next: NextFunction){
     res.on('finish', () => {
