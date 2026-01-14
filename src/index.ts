@@ -8,9 +8,9 @@ const PORT = 8080;
 
 app.use(middlewareLogResponses);
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
-app.get("/healthz", handlerReadiness);
-app.get("/metrics", handlerMetricsDisplay);
-app.get("/reset", handlerMetricsReset);
+app.get("/api/healthz", handlerReadiness);
+app.get("/api/metrics", handlerMetricsDisplay);
+app.get("/api/reset", handlerMetricsReset);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
