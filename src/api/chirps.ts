@@ -2,35 +2,22 @@ import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
 
 export async function handlerChirpValidation(req: Request, res: Response) {
-  let body = ""; // 1. Initialize
+  type parameters = {
+    body: string;
+  };
 
-  // 2. Listen for data events
-  req.on("data", (chunk) => {
-    body += chunk;
-  });
+   // req.body is automatically parsed
+  const params: parameters = req.body;
+  const body:string = params?.body;
+  if (!body || typeof body !== 'string'){
+    respondWithError(res, 400, "Invalid JSON");
+    return;
+  }
 
-  // 3. Listen for end events
-  req.on("end", () => {
-    try {
-      const parsedBody = JSON.parse(body);
-      // now you can use `parsedBody` as a JavaScript object
-      
-      console.log(`Message: ${parsedBody}`);
-      const msg:string = parsedBody?.body;
-      if (!msg || typeof msg !== 'string'){
-        throw new Error("Invalid JSON");
-      }
+  if(body.length > 140){
+    respondWithError(res, 400, "Chirp is too long");
+    return;
+  }
 
-      if(msg.length > 140){
-        throw new Error("Chirp is too long");
-      }
-
-      respondWithJSON(res, 200, { valid: true });    
-    } catch (error) {
-        if (error instanceof Error)
-        {
-          respondWithError(res, 400, error.message);
-        }
-    }
-  });
+  respondWithJSON(res, 200, { valid: true });    
 }

@@ -7,6 +7,8 @@ import { handlerChirpValidation } from "./api/chirps.js";
 const app = express();
 const PORT = 8080;
 
+// Built-in JSON body parsing middleware
+app.use(express.json());
 app.use(middlewareLogResponses);
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 app.get("/api/healthz", handlerReadiness);
