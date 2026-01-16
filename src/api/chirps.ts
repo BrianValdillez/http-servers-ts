@@ -10,15 +10,13 @@ export async function handlerChirpValidation(req: Request, res: Response) {
   const params: parameters = req.body;
   let body:string = params?.body;
   if (!body || typeof body !== 'string'){
-    respondWithError(res, 400, "Invalid JSON");
-    return;
+    throw new Error("Invalid JSON");
   }
 
   body = cleanMessage(body);
 
   if(body.length > 140){
-    respondWithError(res, 400, "Chirp is too long");
-    return;
+    throw new Error("Chirp is too long");
   }
 
   respondWithJSON(res, 200, { cleanedBody: body });    

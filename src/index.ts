@@ -1,6 +1,6 @@
 import express from "express";
 import { Request, Response } from "express";
-import { middlewareLogResponses, middlewareMetricsInc } from "./api/middleware.js";
+import { middlewareErrorHandler, middlewareLogResponses, middlewareMetricsInc } from "./api/middleware.js";
 import { handlerMetricsDisplay, handlerMetricsReset } from "./api/metrics.js";
 import { handlerChirpValidation } from "./api/chirps.js";
 
@@ -15,6 +15,9 @@ app.get("/api/healthz", handlerReadiness);
 app.post('/api/validate_chirp', handlerChirpValidation)
 app.get("/admin/metrics", handlerMetricsDisplay);
 app.post("/admin/reset", handlerMetricsReset);
+
+// Errors must be defined after route handlers, but before the call to listen.
+app.use(middlewareErrorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);
