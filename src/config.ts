@@ -1,15 +1,25 @@
 import { env } from "node:process";
+import { DBConfig, migrationConfig } from "./db/config.js";
 
 process.loadEnvFile();
 
 type APIConfig = {
-    dbURL: string;
     fileserverHits: number;
 };
 
-export const config: APIConfig = {
-    dbURL: envOOrThrow('DB_URL'),
-    fileserverHits: 0,
+type Config = {
+    api: APIConfig;
+    db: DBConfig;
+};
+
+export const config: Config = {
+    api: {
+        fileserverHits: 0,
+    },
+    db: {
+        url: envOOrThrow('DB_URL'),
+        migrationConfig: migrationConfig,
+    },
 };
 
 function envOOrThrow(key: string): string {
