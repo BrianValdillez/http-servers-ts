@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
+import { BadRequestError } from "./middleware.js";
 
 export async function handlerChirpValidation(req: Request, res: Response) {
   type parameters = {
@@ -10,13 +11,13 @@ export async function handlerChirpValidation(req: Request, res: Response) {
   const params: parameters = req.body;
   let body:string = params?.body;
   if (!body || typeof body !== 'string'){
-    throw new Error("Invalid JSON");
+    throw new BadRequestError("Invalid JSON");
   }
 
   body = cleanMessage(body);
 
   if(body.length > 140){
-    throw new Error("Chirp is too long");
+    throw new BadRequestError("Chirp is too long. Max length is 140");
   }
 
   respondWithJSON(res, 200, { cleanedBody: body });    
@@ -29,7 +30,6 @@ function cleanMessage(msg: string): string {
 
   for (const i in words){
     const word = words[i];
-    console.log(`Word #${i}: ${word}`);
     if (PROFANE_WORDS.includes(word.toLowerCase()))
     {
       words[i] = PROFANE_REPLACEMENT;
