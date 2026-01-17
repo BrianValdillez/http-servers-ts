@@ -5,6 +5,7 @@ process.loadEnvFile();
 
 type APIConfig = {
     fileserverHits: number;
+    platform: string;
 };
 
 type Config = {
@@ -15,6 +16,7 @@ type Config = {
 export const config: Config = {
     api: {
         fileserverHits: 0,
+        platform: envOOrThrow('PLATFORM'),
     },
     db: {
         url: envOOrThrow('DB_URL'),

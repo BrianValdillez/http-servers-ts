@@ -6,9 +6,12 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 
 import { config } from "./config.js";
-import { middlewareErrorHandler, middlewareLogResponses, middlewareMetricsInc } from "./api/middleware.js";
-import { handlerMetricsDisplay, handlerMetricsReset } from "./api/metrics.js";
+import { ForbiddenError, middlewareErrorHandler, middlewareLogResponses, middlewareMetricsInc } from "./api/middleware.js";
+import { handlerMetricsDisplay, resetMetrics } from "./api/metrics.js";
 import { handlerChirpValidation } from "./api/chirps.js";
+import { resetUsers } from "./db/queries/users.js";
+import { respondWithError } from "./api/json.js";
+import { handlerCreateUser } from "./api/db.js";
 
 const migrationClient = postgres( config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -21,9 +24,10 @@ app.use(express.json());
 app.use(middlewareLogResponses);
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 app.get("/api/healthz", handlerReadiness);
+app.post('/api/users', handlerCreateUser);
 app.post('/api/validate_chirp', handlerChirpValidation)
 app.get("/admin/metrics", handlerMetricsDisplay);
-app.post("/admin/reset", handlerMetricsReset);
+app.post("/admin/reset", handlerAPIReset);
 
 // Errors must be defined after route handlers, but before the call to listen.
 app.use(middlewareErrorHandler);
@@ -41,3 +45,14 @@ async function handlerReadiness(req: Request, res: Response){
     res.status(200).send('OK');
 }
 
+async function handlerAPIReset(req: Request, res: Response)
+{
+  if (config.api.platform != 'dev'){
+    throw new ForbiddenError('Admin API is forbidden on non-dev platforms');
+  }
+
+  await resetUsers();
+  resetMetrics();
+
+  res.sendStatus(200);
+}

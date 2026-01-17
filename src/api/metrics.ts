@@ -16,8 +16,8 @@ export async function handlerMetricsDisplay(req: Request, res: Response){
 </html>`);
 }
 
-export async function handlerMetricsReset(req: Request, res: Response){
+export function resetMetrics(): boolean{
     config.api.fileserverHits = 0;
 
-    res.sendStatus(200);
+    return true;
 }
