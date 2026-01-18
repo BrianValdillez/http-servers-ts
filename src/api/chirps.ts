@@ -1,18 +1,25 @@
 import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
 import { BadRequestError } from "./middleware.js";
+import { createChirp } from "../db/queries/chirps.js";
 
-export async function handlerChirpValidation(req: Request, res: Response) {
+export async function handlerPostChirps(req: Request, res: Response){
   type parameters = {
     body: string;
+    userId: string;
   };
 
-   // req.body is automatically parsed
-  const params: parameters = req.body;
-  let body:string = params?.body;
-  if (!body || typeof body !== 'string'){
-    throw new BadRequestError("Invalid JSON");
-  }
+  const params = req.body;
+
+
+  params.body = validateChirp(params.body);
+  //console.log(`--NEW CHIRP BY ${params.userId}--\n${params.body}`)
+  const newChirp = await createChirp(params.body, params.userId);
+
+  respondWithJSON(res, 201, newChirp); 
+}
+
+export function validateChirp(body: string): string {
 
   body = cleanMessage(body);
 
@@ -20,7 +27,8 @@ export async function handlerChirpValidation(req: Request, res: Response) {
     throw new BadRequestError("Chirp is too long. Max length is 140");
   }
 
-  respondWithJSON(res, 200, { cleanedBody: body });    
+  return body;
+   
 }
 
 const PROFANE_REPLACEMENT = '****';

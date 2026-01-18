@@ -8,7 +8,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
 import { ForbiddenError, middlewareErrorHandler, middlewareLogResponses, middlewareMetricsInc } from "./api/middleware.js";
 import { handlerMetricsDisplay, resetMetrics } from "./api/metrics.js";
-import { handlerChirpValidation } from "./api/chirps.js";
+import { handlerPostChirps } from "./api/chirps.js";
 import { resetUsers } from "./db/queries/users.js";
 import { respondWithError } from "./api/json.js";
 import { handlerCreateUser } from "./api/db.js";
@@ -25,7 +25,7 @@ app.use(middlewareLogResponses);
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 app.get("/api/healthz", handlerReadiness);
 app.post('/api/users', handlerCreateUser);
-app.post('/api/validate_chirp', handlerChirpValidation)
+app.post('/api/chirps', handlerPostChirps);
 app.get("/admin/metrics", handlerMetricsDisplay);
 app.post("/admin/reset", handlerAPIReset);
 
