@@ -1,7 +1,7 @@
 import { pgTable, timestamp, text, varchar, uuid } from "drizzle-orm/pg-core";
 
 export type NewUser = typeof users.$inferInsert;
-export type NewChirp = typeof chirps.$inferInsert;
+export type ChirpEntry = typeof chirps.$inferInsert;
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
