@@ -1,28 +1,74 @@
 import { Request, Response } from "express";
-import { createUser } from "../db/queries/users.js";
+import { type UserInfo } from "../db/schema.js";
+import { createUser, getUser } from "../db/queries/users.js";
 import { BadRequestError } from "./middleware.js";
-import { respondWithJSON } from "./json.js";
-import { stringify } from "node:querystring";
+import { respondWithError, respondWithJSON } from "./json.js";
+import { checkPasswordHash, hashPassword } from "../auth.js";
+
+// This was originally a generic DB file, but is more of a users file now.
 
 export async function handlerCreateUser(req: Request, res: Response){
     type parameters = {
         email: string;
+        password: string;
     };
 
     // req.body is automatically parsed
     const params: parameters = req.body;
-    console.log(JSON.stringify(params));
     const email = params?.email;
+    const password = params.password;
 
-    if (!email || typeof email != 'string'){
+    if (!email || typeof email != 'string' || 
+        !password || typeof password != 'string'){
         throw new BadRequestError("Invalid JSON");
     }
 
-    const newUser = await createUser({ email: email })
-    res.set({
-        'Content-Type': 'text/plain',
-        'charset': 'utf-8',
-    });
+    const hashedPassword = await hashPassword(password);
+
+    const newUser = await createUser({ email: email, hashedPassword: hashedPassword });
+    const userInfo: UserInfo = {
+        id: newUser.id,
+        createdAt: newUser.createdAt,
+        updatedAt: newUser.updatedAt,
+        email: newUser.email,
+    };
+    //res.set({
+    //    'Content-Type': 'text/plain',
+    //    'charset': 'utf-8',
+    //});
 
     respondWithJSON(res, 201, newUser);
+}
+
+export async function handlerUserLogin(req: Request, res: Response){
+    type parameters = {
+        email: string;
+        password: string;
+    };
+
+    const params: parameters = req.body;
+
+    try{
+        const userEntry = await getUser(params.email);
+        const hashedPassword = userEntry.hashedPassword;
+        if (!hashedPassword || hashedPassword === 'unset'){
+            throw new Error();
+        }
+
+        const success = await checkPasswordHash(params.password, hashedPassword);
+        
+        if (!success){
+            throw new Error();
+        }
+
+        const userInfo: UserInfo = {
+            id: userEntry.id,
+            createdAt: userEntry.createdAt,
+            updatedAt: userEntry.updatedAt,
+            email: userEntry.email,
+        };
+        respondWithJSON(res, 200,userInfo);
+    }catch{
+        respondWithError(res, 401, 'Incorrect email or password');
+    }
 }
