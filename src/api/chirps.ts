@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
-import { BadRequestError } from "./middleware.js";
+import { BadRequestError, NotFoundError } from "./middleware.js";
 import { createChirp, getAllChirps, getChirp } from "../db/queries/chirps.js";
 
 export async function handlerGetChirps(req: Request, res: Response){
@@ -17,7 +17,7 @@ export async function handlerGetChirpByID(req: Request, res: Response){
     respondWithJSON(res, 200, chirp);
   }
   catch {
-    return respondWithError(res, 404, `Could not find Chirp with ID: ${chirpId}`)
+    throw new NotFoundError(`Could not find Chirp with ID: ${chirpId}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { type UserInfo } from "../db/schema.js";
 import { createUser, getUser } from "../db/queries/users.js";
-import { BadRequestError } from "./middleware.js";
+import { BadRequestError, UnauthorizedError } from "./middleware.js";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { checkPasswordHash, hashPassword } from "../auth.js";
 
@@ -69,6 +69,6 @@ export async function handlerUserLogin(req: Request, res: Response){
         };
         respondWithJSON(res, 200,userInfo);
     }catch{
-        respondWithError(res, 401, 'Incorrect email or password');
+        throw new UnauthorizedError('Incorrect email or password');
     }
 }
