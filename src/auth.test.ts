@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { hashPassword, checkPasswordHash, makeJWT, validateJWT } from "./auth.js";
+import { hashPassword, checkPasswordHash, makeJWT, validateJWT, getBearerToken } from "./auth.js";
+import { Request } from "express";
 
 describe("Password Hashing", () => {
   const password1 = "correctPassword123!";
@@ -72,3 +73,18 @@ describe("JWT Validation", () => {
     }
   });
 });
+
+// describe("Bearer Token Validation", () => {
+
+//     let req1:Request;
+//     let req2:Request;
+
+//   beforeAll(async () => {
+//     jwt1 = makeJWT(userId1, 5000, secret1);
+//     jwt2 = makeJWT(userId2, 5000, secret2);
+//   });
+
+//     it('should retrieve the bearer token when provided', async () => {
+//         const bearer = getBearerToken(req1);
+//   });
+//});

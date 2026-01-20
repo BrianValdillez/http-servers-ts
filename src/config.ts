@@ -1,7 +1,11 @@
-import { env } from "node:process";
-import { DBConfig, migrationConfig } from "./db/config.js";
+import type { MigrationConfig } from "drizzle-orm/migrator";
 
 process.loadEnvFile();
+
+type Config = {
+    api: APIConfig;
+    db: DBConfig;
+};
 
 type APIConfig = {
     fileserverHits: number;
@@ -9,9 +13,13 @@ type APIConfig = {
     secret: string;
 };
 
-type Config = {
-    api: APIConfig;
-    db: DBConfig;
+type DBConfig = {
+    url: string,
+    migrationConfig: MigrationConfig,
+};
+
+const migrationConfig: MigrationConfig = {
+  migrationsFolder: "./src/db/out",
 };
 
 export const config: Config = {
@@ -30,6 +38,7 @@ function envOrThrow(key: string): string {
     if (!process.env){
         throw new Error(`env key not found: ${key}`);
     }
+    //console.log(`[ENV] ${key} => ${process.env[key]}`);
 
     return process.env[key] as string;
 }

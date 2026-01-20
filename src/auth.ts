@@ -1,4 +1,5 @@
 import * as argon2 from "argon2";
+import * as crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { Request, Response } from "express";
 import { UnauthorizedError } from "./api/middleware.js";
@@ -46,4 +47,8 @@ export function getBearerToken(req: Request): string{
     }
 
     return auth.replace(/^Bearer\s+/, '');
+}
+
+export function makeRefreshToken(){
+    return crypto.randomBytes(32).toString('hex');
 }
