@@ -1,9 +1,10 @@
 import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
-import { BadRequestError, NotFoundError } from "./middleware.js";
-import { createChirp, getAllChirps, getChirp } from "../db/queries/chirps.js";
+import { BadRequestError, ForbiddenError, NotFoundError } from "./middleware.js";
+import { createChirp, deleteChirp, getAllChirps, getChirp } from "../db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
+import { ChirpSelect } from "src/db/schema.js";
 
 export async function handlerGetChirps(req: Request, res: Response){
   const allChirps = await getAllChirps();
@@ -14,13 +15,12 @@ export async function handlerGetChirps(req: Request, res: Response){
 export async function handlerGetChirpByID(req: Request, res: Response){
   const chirpId = req.params['chirpID'] as string;
 
-  try {
-    const chirp = await getChirp(chirpId);
-    respondWithJSON(res, 200, chirp);
+  const chirp = await getChirp(chirpId);
+  if (chirp === undefined){
+    throw new NotFoundError(`Could not find Chirp with ID: ${chirpId}`);;
   }
-  catch {
-    throw new NotFoundError(`Could not find Chirp with ID: ${chirpId}`);
-  }
+  
+  respondWithJSON(res, 200, chirp);
 }
 
 export async function handlerPostChirps(req: Request, res: Response){
@@ -29,16 +29,34 @@ export async function handlerPostChirps(req: Request, res: Response){
   const userId = validateJWT(token, config.api.secret);
   type parameters = {
     body: string;
-    //userId: string;
   };
 
   const params = req.body;
 
   params.body = validateChirp(params.body);
-  //console.log(`--NEW CHIRP BY ${params.userId}--\n${params.body}`)
   const newChirp = await createChirp(params.body, userId);
 
   respondWithJSON(res, 201, newChirp); 
+}
+
+export async function handlerDeleteChirp(req: Request, res: Response){
+  const token = getBearerToken(req);
+  const userId = validateJWT(token, config.api.secret);
+
+  const chirpId = req.params['chirpID'] as string;
+
+  const chirp = await getChirp(chirpId);
+  if (chirp === undefined){
+    throw new NotFoundError(`Could not find Chirp with ID: ${chirpId}`);
+  }
+
+  if (chirp.userId != userId){
+    throw new ForbiddenError("Cannot delete other people's Chirps!");
+  }
+
+  await deleteChirp(chirpId);
+  res.status(204).send();
+  
 }
 
 export function validateChirp(body: string): string {

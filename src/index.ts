@@ -8,13 +8,11 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { config } from "./config.js";
 import { ForbiddenError, middlewareErrorHandler, middlewareLogResponses, middlewareMetricsInc } from "./api/middleware.js";
 import { handlerMetricsDisplay, resetMetrics } from "./api/metrics.js";
-import { handlerGetChirpByID, handlerGetChirps, handlerPostChirps } from "./api/chirps.js";
+import { handlerDeleteChirp, handlerGetChirpByID, handlerGetChirps, handlerPostChirps } from "./api/chirps.js";
 import { resetUsers } from "./db/queries/users.js";
 import { respondWithError } from "./api/json.js";
 import { handlerCreateUser, handlerUserLogin, handlerUpdateUser, handlerRefreshAuthorizationToken, handlerRevokeRefreshToken } from "./api/db.js";
 
-console.log(`DB_URL: ${config.db.url}`);
-//console.log(JSON.stringify(config.db.migrationConfig));
 const migrationClient = postgres( config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
 
@@ -26,8 +24,10 @@ app.use(express.json());
 app.use(middlewareLogResponses);
 app.use("/app", middlewareMetricsInc, express.static("./src/app"));
 app.get("/api/healthz", handlerReadiness);
+
 app.get('/api/chirps', handlerGetChirps);
 app.get('/api/chirps/:chirpID', handlerGetChirpByID);
+app.delete('/api/chirps/:chirpID', handlerDeleteChirp);
 app.post('/api/login', handlerUserLogin);
 app.post('/api/refresh', handlerRefreshAuthorizationToken);
 app.post('/api/revoke', handlerRevokeRefreshToken);

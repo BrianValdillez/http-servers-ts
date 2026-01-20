@@ -6,6 +6,7 @@ export type UserUpdate = Pick<UserSelect, 'email' | 'hashedPassword'>;
 
 export type UserInfo = Omit<UserEntry, 'hashedPassword'>;
 export type ChirpEntry = typeof chirps.$inferInsert;
+export type ChirpSelect = typeof chirps.$inferSelect;
 export type RefreshTokenEntry = typeof refreshTokens.$inferInsert;
 export type RefreshTokenSelect = typeof refreshTokens.$inferSelect;
 
