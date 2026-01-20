@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
 import { BadRequestError, NotFoundError } from "./middleware.js";
 import { createChirp, getAllChirps, getChirp } from "../db/queries/chirps.js";
+import { getBearerToken, validateJWT } from "../auth.js";
+import { config } from "../config.js";
 
 export async function handlerGetChirps(req: Request, res: Response){
   const allChirps = await getAllChirps();
@@ -22,17 +24,19 @@ export async function handlerGetChirpByID(req: Request, res: Response){
 }
 
 export async function handlerPostChirps(req: Request, res: Response){
+  const token = getBearerToken(req);
+
+  const userId = validateJWT(token, config.api.secret);
   type parameters = {
     body: string;
-    userId: string;
+    //userId: string;
   };
 
   const params = req.body;
 
-
   params.body = validateChirp(params.body);
   //console.log(`--NEW CHIRP BY ${params.userId}--\n${params.body}`)
-  const newChirp = await createChirp(params.body, params.userId);
+  const newChirp = await createChirp(params.body, userId);
 
   respondWithJSON(res, 201, newChirp); 
 }

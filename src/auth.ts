@@ -1,6 +1,8 @@
 import * as argon2 from "argon2";
 import jwt from 'jsonwebtoken';
-import { UnauthorizedError } from "./api/middleware";
+import { Request, Response } from "express";
+import { UnauthorizedError } from "./api/middleware.js";
+
 
 export async function hashPassword(password: string): Promise<string>{
     return await argon2.hash(password);
@@ -35,4 +37,13 @@ export function validateJWT(tokenString: string, secret: string): string{
     catch{
         throw new UnauthorizedError('Could not validate JWT');
     }
+}
+
+export function getBearerToken(req: Request): string{
+    const auth = req.get('Authorization');
+    if (auth === undefined){
+        throw new UnauthorizedError('Invalid Authorization Token');
+    }
+
+    return auth.replace(/^Bearer\s+/, '');
 }

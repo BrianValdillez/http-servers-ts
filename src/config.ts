@@ -6,6 +6,7 @@ process.loadEnvFile();
 type APIConfig = {
     fileserverHits: number;
     platform: string;
+    secret: string;
 };
 
 type Config = {
@@ -16,15 +17,16 @@ type Config = {
 export const config: Config = {
     api: {
         fileserverHits: 0,
-        platform: envOOrThrow('PLATFORM'),
+        platform: envOrThrow('PLATFORM'),
+        secret: envOrThrow('SECRET'),
     },
     db: {
-        url: envOOrThrow('DB_URL'),
+        url: envOrThrow('DB_URL'),
         migrationConfig: migrationConfig,
     },
 };
 
-function envOOrThrow(key: string): string {
+function envOrThrow(key: string): string {
     if (!process.env){
         throw new Error(`env key not found: ${key}`);
     }
