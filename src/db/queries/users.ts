@@ -25,3 +25,7 @@ export async function updateUser(userId: string, userUpdate: UserUpdate): Promis
   const [user] = await db.update(users).set(userUpdate).where(eq(users.id, userId)).returning();
   return user;
 }
+
+export async function upgradeUser(userId: string){
+  await db.update(users).set({ isChirpyRed: true}).where(eq(users.id, userId));
+}

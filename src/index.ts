@@ -11,7 +11,7 @@ import { handlerMetricsDisplay, resetMetrics } from "./api/metrics.js";
 import { handlerDeleteChirp, handlerGetChirpByID, handlerGetChirps, handlerPostChirps } from "./api/chirps.js";
 import { resetUsers } from "./db/queries/users.js";
 import { respondWithError } from "./api/json.js";
-import { handlerCreateUser, handlerUserLogin, handlerUpdateUser, handlerRefreshAuthorizationToken, handlerRevokeRefreshToken } from "./api/db.js";
+import { handlerCreateUser, handlerPolkaWebhooks, handlerUserLogin, handlerUpdateUser, handlerRefreshAuthorizationToken, handlerRevokeRefreshToken } from "./api/db.js";
 
 const migrationClient = postgres( config.db.url, { max: 1 });
 await migrate(drizzle(migrationClient), config.db.migrationConfig);
@@ -34,6 +34,8 @@ app.post('/api/revoke', handlerRevokeRefreshToken);
 app.post('/api/chirps', handlerPostChirps);
 app.post('/api/users', handlerCreateUser);
 app.put('/api/users', handlerUpdateUser);
+
+app.post('/api/polka/webhooks', handlerPolkaWebhooks);
 
 app.get("/admin/metrics", handlerMetricsDisplay);
 app.post("/admin/reset", handlerAPIReset);

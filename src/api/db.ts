@@ -1,11 +1,12 @@
 import { application, Request, Response } from "express";
 import { RefreshTokenSelect, type UserInfo } from "../db/schema.js";
-import { createUser, updateUser, getUser } from "../db/queries/users.js";
+import { createUser, updateUser, getUser, upgradeUser } from "../db/queries/users.js";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "./middleware.js";
 import { respondWithError, respondWithJSON } from "./json.js";
 import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 import { getRefreshToken, registerRefreshToken, revokeRefreshToken } from "../db/queries/refreshTokens.js";
+import { isPgSchema } from "drizzle-orm/pg-core/schema.js";
 
 // This was originally a generic DB file, but is more of a users file now.
 
@@ -33,6 +34,7 @@ export async function handlerCreateUser(req: Request, res: Response){
         createdAt: newUser.createdAt,
         updatedAt: newUser.updatedAt,
         email: newUser.email,
+        isChirpyRed: newUser.isChirpyRed,
     };
 
     respondWithJSON(res, 201, userInfo);
@@ -57,6 +59,7 @@ export async function handlerUpdateUser(req: Request, res: Response){
         createdAt: updatedUser.createdAt,
         updatedAt: updatedUser.updatedAt,
         email: updatedUser.email,
+        isChirpyRed: updatedUser.isChirpyRed,
     };
 
     respondWithJSON(res, 200, userInfo);
@@ -89,7 +92,6 @@ export async function handlerUserLogin(req: Request, res: Response){
         const refreshToken = makeRefreshToken();
 
         const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_DAYS * 24 * 60 * 60 * 1000);
-        console.log(`Expires At: ${expiresAt.toString()}`);
         await registerRefreshToken({
             token: refreshToken,
             userId: userEntry.id as string,
@@ -101,6 +103,7 @@ export async function handlerUserLogin(req: Request, res: Response){
             createdAt: userEntry.createdAt,
             updatedAt: userEntry.createdAt,
             email: userEntry.email,
+            isChirpyRed: userEntry.isChirpyRed,
             token: authToken,
             refreshToken: refreshToken,
         };
@@ -140,4 +143,28 @@ export async function handlerRevokeRefreshToken(req: Request, res: Response){
     }
 
     res.status(204).send();
+}
+
+export async function handlerPolkaWebhooks(req: Request, res: Response){
+    type parameters = {
+        event: string;
+        data: {
+            userId: string;
+        };
+    };
+
+    const params: parameters = req.body;
+
+    if (params.event !== 'user.upgraded'){
+        res.status(204).send();
+        return;
+    }
+
+    try{
+        await upgradeUser(params.data.userId);
+        res.status(204).send();
+    } catch {
+        throw new NotFoundError(`Could not find User ID: ${params.data.userId}`);
+    }
+
 }
