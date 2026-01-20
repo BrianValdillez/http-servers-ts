@@ -20,6 +20,11 @@ export async function handlerGetChirps(req: Request, res: Response){
     allChirps = await getAllChirps();
   }
 
+  const sortQuery = req.query.sort;
+  if (typeof sortQuery === 'string' && sortQuery === 'desc'){
+    allChirps.reverse();
+  }
+
   respondWithJSON(res, 200, allChirps);
 }
 
