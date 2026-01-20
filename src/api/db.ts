@@ -3,7 +3,7 @@ import { RefreshTokenSelect, type UserInfo } from "../db/schema.js";
 import { createUser, updateUser, getUser, upgradeUser } from "../db/queries/users.js";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "./middleware.js";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
+import { checkPasswordHash, getAPIKey, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 import { getRefreshToken, registerRefreshToken, revokeRefreshToken } from "../db/queries/refreshTokens.js";
 import { isPgSchema } from "drizzle-orm/pg-core/schema.js";
@@ -91,7 +91,7 @@ export async function handlerUserLogin(req: Request, res: Response){
         const authToken = makeJWT(userEntry.id as string, ACCESS_TOKEN_LIFETIME_SECONDS, config.api.secret);
         const refreshToken = makeRefreshToken();
 
-        const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_DAYS * 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_DAYS * 24 * 60 * 60 * 1000);//
         await registerRefreshToken({
             token: refreshToken,
             userId: userEntry.id as string,
@@ -146,6 +146,11 @@ export async function handlerRevokeRefreshToken(req: Request, res: Response){
 }
 
 export async function handlerPolkaWebhooks(req: Request, res: Response){
+    const apiKey = getAPIKey(req);
+    if (apiKey !== config.api.polkaKey){
+        throw new UnauthorizedError('Invalid API Key');
+    }
+
     type parameters = {
         event: string;
         data: {

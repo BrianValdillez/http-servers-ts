@@ -60,3 +60,12 @@ export function getBearerToken(req: Request): string{
 export function makeRefreshToken(){
     return crypto.randomBytes(32).toString('hex');
 }
+
+export function getAPIKey(req: Request): string{
+    const auth = req.get('Authorization');
+    if (auth === undefined){
+        throw new UnauthorizedError('Invalid Authorization Token');
+    }
+
+    return auth.replace(/^ApiKey\s+/, '');
+}
