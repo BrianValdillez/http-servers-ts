@@ -1,7 +1,9 @@
 import { pgTable, timestamp, text, varchar, uuid } from "drizzle-orm/pg-core";
 
 export type UserEntry = typeof users.$inferInsert;
-//export type UserSelect = typeof users.$inferSelect;
+export type UserSelect = typeof users.$inferSelect;
+export type UserUpdate = Pick<UserSelect, 'email' | 'hashedPassword'>;
+
 export type UserInfo = Omit<UserEntry, 'hashedPassword'>;
 export type ChirpEntry = typeof chirps.$inferInsert;
 export type RefreshTokenEntry = typeof refreshTokens.$inferInsert;

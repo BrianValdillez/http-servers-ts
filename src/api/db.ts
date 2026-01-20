@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import { application, Request, Response } from "express";
 import { RefreshTokenSelect, type UserInfo } from "../db/schema.js";
-import { createUser, getUser } from "../db/queries/users.js";
+import { createUser, updateUser, getUser } from "../db/queries/users.js";
 import { BadRequestError, NotFoundError, UnauthorizedError } from "./middleware.js";
 import { respondWithError, respondWithJSON } from "./json.js";
-import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken } from "../auth.js";
+import { checkPasswordHash, getBearerToken, hashPassword, makeJWT, makeRefreshToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 import { getRefreshToken, registerRefreshToken, revokeRefreshToken } from "../db/queries/refreshTokens.js";
 
@@ -34,12 +34,32 @@ export async function handlerCreateUser(req: Request, res: Response){
         updatedAt: newUser.updatedAt,
         email: newUser.email,
     };
-    //res.set({
-    //    'Content-Type': 'text/plain',
-    //    'charset': 'utf-8',
-    //});
 
-    respondWithJSON(res, 201, newUser);
+    respondWithJSON(res, 201, userInfo);
+}
+
+export async function handlerUpdateUser(req: Request, res: Response){
+    type parameters = {
+        email: string;
+        password: string;
+    };
+
+    const params: parameters = req.body;
+
+    const accessToken = getBearerToken(req);
+    const userId = validateJWT(accessToken, config.api.secret);
+
+    const hashedPassword = await hashPassword(params.password);
+
+    const updatedUser = await updateUser(userId, { email: params.email, hashedPassword: hashedPassword });
+    const userInfo: UserInfo = {
+        id: updatedUser.id,
+        createdAt: updatedUser.createdAt,
+        updatedAt: updatedUser.updatedAt,
+        email: updatedUser.email,
+    };
+
+    respondWithJSON(res, 200, userInfo);
 }
 
 const ACCESS_TOKEN_LIFETIME_SECONDS = 60 * 60;
@@ -68,7 +88,7 @@ export async function handlerUserLogin(req: Request, res: Response){
         const authToken = makeJWT(userEntry.id as string, ACCESS_TOKEN_LIFETIME_SECONDS, config.api.secret);
         const refreshToken = makeRefreshToken();
 
-        const expiresAt = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + REFRESH_TOKEN_LIFETIME_DAYS * 24 * 60 * 60 * 1000);
         console.log(`Expires At: ${expiresAt.toString()}`);
         await registerRefreshToken({
             token: refreshToken,

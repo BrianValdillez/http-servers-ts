@@ -1,8 +1,9 @@
 import * as argon2 from "argon2";
 import * as crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { Request, Response } from "express";
 import { UnauthorizedError } from "./api/middleware.js";
+import { stringify } from "querystring";
 
 
 export async function hashPassword(password: string): Promise<string>{
@@ -28,15 +29,22 @@ export function makeJWT(userID: string, expiresIn: number, secret: string): stri
 }
 
 export function validateJWT(tokenString: string, secret: string): string{
+    // TODO: Spit up try into smaller blocks for more accurate errors.
     try {
-        const decoded = jwt.verify(tokenString, secret);
-        if (decoded.sub === undefined)
+        const decoded = jwt.verify(tokenString, secret) as JwtPayload;
+
+        if (decoded.sub === undefined || decoded.exp == undefined)
             throw new Error();
+
+        // TODO: Fix this date check for expiration
+        // if (decoded.exp < Date.now()){
+        //     throw new Error();
+        // }
 
         return decoded.sub as string; 
     }
     catch{
-        throw new UnauthorizedError('Could not validate JWT');
+        throw new UnauthorizedError('Invalid JWT');
     }
 }
 
