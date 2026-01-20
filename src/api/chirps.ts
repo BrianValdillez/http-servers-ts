@@ -1,13 +1,24 @@
 import { Request, Response } from "express";
 import { respondWithJSON, respondWithError } from "./json.js";
 import { BadRequestError, ForbiddenError, NotFoundError } from "./middleware.js";
-import { createChirp, deleteChirp, getAllChirps, getChirp } from "../db/queries/chirps.js";
+import { createChirp, deleteChirp, getAllChirps, getAllChirpsByUser, getChirp } from "../db/queries/chirps.js";
 import { getBearerToken, validateJWT } from "../auth.js";
 import { config } from "../config.js";
 import { ChirpSelect } from "src/db/schema.js";
 
 export async function handlerGetChirps(req: Request, res: Response){
-  const allChirps = await getAllChirps();
+  let userId = "";
+  let authorIdQuery = req.query.authorId;
+  if (typeof authorIdQuery === 'string'){
+    userId = authorIdQuery;
+  }
+
+  let allChirps: ChirpSelect[];
+  if (userId !== ""){
+    allChirps = await getAllChirpsByUser(userId);
+  }else{
+    allChirps = await getAllChirps();
+  }
 
   respondWithJSON(res, 200, allChirps);
 }
